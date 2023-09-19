@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Local Storage User Data</title>
+</head>
+<body>
+    <h1>User Registration</h1>
+    <form id="userForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name"><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email"><br>
+
+        <button type="button" onclick="addUser()">Add User</button>
+    </form>
+
+    <h2>User List</h2>
+    <ul id="userList"></ul>
+
+    <script>
+        // Function to add a new user to local storage
+        function addUser() {
+            // Retrieve existing data from local storage
+            let existingData = localStorage.getItem('userData');
+            // Parse the existing data into an object or create an empty object if no data exists
+            let userData = existingData ? JSON.parse(existingData) : {};
+
+            // Get user input from the form
+            let name = document.getElementById('name').value;
+            let email = document.getElementById('email').value;
+
+            // Generate a unique identifier (you might have a better method for this)
+            let userId = Date.now().toString();
+
+            // Create a new user object
+            let newUser = {
+                id: userId,
+                name: name,
+                email: email
+            };
+
+            // Add the new user to the object
+            userData[userId] = newUser;
+
+            // Stringify the updated object back to a JSON string
+            let updatedData = JSON.stringify(userData);
+
+            // Store the updated JSON string in local storage
+            localStorage.setItem('userData', updatedData);
+
+            // Clear the form fields
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+
+            // Display the updated user list
+            displayUserList();
+        }
+
+        // Function to edit a user's information
+        function editUser(userId) {
+            // Retrieve the current user data from local storage
+            let existingData = localStorage.getItem('userData');
+            
+            // Parse the data into an object or create an empty object if no data exists
+            let userData = existingData ? JSON.parse(existingData) : {};
+
+            // Check if the user with the given ID exists in local storage
+            if (userData.hasOwnProperty(userId)) {
+                let user = userData[userId];
+
+                // Prompt the user to edit their information
+                let newName = prompt('Edit Name:', user.name);
+                let newEmail = prompt('Edit Email:', user.email);
+
+                // Update the user's information
+                user.name = newName || user.name;
+                user.email = newEmail || user.email;
+
+                // Update the object in local storage
+                userData[userId] = user;
+
+                // Stringify the updated object back to a JSON string
+                let updatedData = JSON.stringify(userData);
+
+                // Update local storage with the modified data
+                localStorage.setItem('userData', updatedData);
+
+                // Update the user entry in the UI
+                let userEntry = document.querySelector(`[data-user-id="${userId}"]`);
+                if (userEntry) {
+                    userEntry.textContent = `Name: ${user.name}, Email: ${user.email}`;
+                    // Add the Edit and Delete buttons back
+                    userEntry.innerHTML += ` <button onclick="editUser('${userId}')">Edit</button> <button onclick="deleteUser('${userId}')">Delete</button>`;
+                }
+            }
+        }
+
+        // Function to delete a user by their unique ID
+        function deleteUser(userId) {
+            // Retrieve the current user data from local storage
+            let existingData = localStorage.getItem('userData');
+            
+            // Parse the data into an object or create an empty object if no data exists
+            let userData = existingData ? JSON.parse(existingData) : {};
+
+            // Check if the user with the given ID exists in local storage
+            if (userData.hasOwnProperty(userId)) {
+                // Remove the user from the object
+                delete userData[userId];
+
+                // Stringify the updated object back to a JSON string
+                let updatedData = JSON.stringify(userData);
+
+                // Update local storage with the modified data
+                localStorage.setItem('userData', updatedData);
+
+                // Remove the user entry from the UI
+                let userEntry = document.querySelector(`[data-user-id="${userId}"]`);
+                if (userEntry) {
+                    userEntry.remove();
+                }
+            }
+        }
+
+        // Function to display the user list
+        function displayUserList() {
+            let userList = document.getElementById('userList');
+            userList.innerHTML = '';
+
+            // Retrieve user data from local storage
+            let userData = localStorage.getItem('userData');
+            if (userData) {
+                userData = JSON.parse(userData);
+
+                for (let userId in userData) {
+                    let user = userData[userId];
+                    let listItem = document.createElement('li');
+                    listItem.textContent = `Name: ${user.name}, Email: ${user.email}`;
+                    // Add an Edit and Delete button for each user
+                    listItem.innerHTML += ` <button onclick="editUser('${userId}')">Edit</button> <button onclick="deleteUser('${userId}')">Delete</button>`;
+                    // Set a data attribute to identify the user
+                    listItem.setAttribute('data-user-id', userId);
+                    userList.appendChild(listItem);
+                }
+            }
+        }
+
+        // Initial display of the user list
+        displayUserList();
+    </script>
+</body>
+</html>
